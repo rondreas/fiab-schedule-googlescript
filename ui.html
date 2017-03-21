@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script>  
+      window.onload = function loadData(){
+        google.script.run
+          .withSuccessHandler(storeData)
+          .schedules();
+      }
+    
+      function storeData(data){
+        window.schedules = JSON.parse(data);
+        console.log("Data stored");
+        fillSheetList();
+      }
+      
+      function fillSheetList() {
+        var ul = document.getElementById("SheetList");
+        for (var i = 0; i < window.schedules.length; i++){
+          var li = document.createElement("li");
+          li.innerHTML = window.schedules[i].name;
+          li.setAttribute("index", i);
+          li.addEventListener("click", function() { fillNameList(this); });
+          ul.appendChild(li);
+        }
+      }
+      
+      function fillNameList(sheetName) {
+        var ul = document.getElementById("NameList");
+        var curSheet = window.schedules[sheetName.getAttribute("index")];
+        var names = Object.keys(curSheet.contents);
+        // Clear the unsorted list
+        while (ul.firstChild) {
+          ul.removeChild(ul.firstChild);
+        }
+        // Add names from sheet to unsorted list
+        for (var i = 0; i < names.length; i++) {
+          var li = document.createElement("li");
+          li.innerHTML = names[i];
+          li.addEventListener("click", function() { scheduleFor(curSheet.contents,this); });
+          ul.appendChild(li)
+        }
+      }
+      
+      function scheduleFor(sheet, element) {
+        window.selected = JSON.stringify(sheet[element.innerHTML]);
+      }
+      
+      function updateForSelected(){
+        if (window.selected) {
+          google.script.run
+            .withSuccessHandler()
+            .addCalendar(JSON.parse(window.selected));
+        } else {
+          console.log("Nothing selected...");
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <ul id="SheetList">
+    </ul>
+    <ul id="NameList">
+    </ul>
+    <button type="button" onclick="updateForSelected()">Check Selected</button>
+  </body>
+</html>
